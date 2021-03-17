@@ -9,8 +9,11 @@ from time import sleep
 var_pairs_file_path = 'varPairs.json'
 backup_dir_name = 'varPairs_backup'
 
-general_min_liq_value = 300
+general_min_liq_value = 500
 general_max_liq_value = sys.maxsize
+
+# Factor to modify the liq value percentually. Eg: -0.1 to reduce 10%, 0.3 to increase 30%... 
+general_percentage_factor = 0
 
 run_as_daemon = False
 daemon_wait_time_minutes = 1
@@ -58,18 +61,23 @@ def modify_coin_data(data_points, coin_data):
             if coin['symbol'] == point['label']:
                 min_liq_value = general_min_liq_value
                 max_liq_value = general_max_liq_value
+                percentage_factor = general_percentage_factor
 
                 if 'min_lick_value' in coin:
                     min_liq_value = float(coin['min_lick_value'])
                 if 'max_lick_value' in coin:
                     max_liq_value = float(coin['max_lick_value'])
+                if 'percentage_factor' in coin:
+                    percentage_factor = float(coin['percentage_factor'])
 
-                if point['y'] < min_liq_value:
+                liq_value_percentage = point['y'] + point['y'] * percentage_factor
+                
+                if liq_value_percentage < min_liq_value:
                     liq_value = min_liq_value
-                elif point['y'] > max_liq_value:
+                elif liq_value_percentage > max_liq_value:
                     liq_value = max_liq_value
                 else:
-                    liq_value = point['y']
+                    liq_value = liq_value_percentage
 
                 coin['lickvalue'] = str(int(liq_value))
 

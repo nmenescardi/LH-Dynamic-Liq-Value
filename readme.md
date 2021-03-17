@@ -24,3 +24,15 @@ add `min_lick_value` and `max_lick_value` into varPairs.json for specific min/ma
 	"tmp_color":  "Black"
 },
 ```
+
+Use `general_percentage_factor` to modify the liq value percentually for all coins. Also, there is a property to override this factor for a specific pair: 
+```
+{
+	"symbol":  "1INCH",
+	"longoffset":  "7.5",
+	"shortoffset":  "7.5",
+	"lickvalue":  "400",
+	"percentage_factor":  "0.8",
+	...
+},
+```
