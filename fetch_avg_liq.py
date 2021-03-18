@@ -57,7 +57,13 @@ def load_coin_data():
 
 def modify_coin_data(data_points, coin_data):
     for point in data_points:
-        for coin in coin_data['coins']:
+
+        if 'coins' in coin_data:
+            coins = coin_data['coins'] # modifying vairPairs.json
+        else:
+            coins = coin_data # modifying coins.json
+
+        for coin in coins:
             if coin['symbol'] == point['label']:
                 min_liq_value = general_min_liq_value
                 max_liq_value = general_max_liq_value
@@ -105,10 +111,10 @@ def backup_var_pairs_file():
 
     timestamp = str(today.year) + '_' + month + '_' + day + '_' + hour + '_' + minute
     try:
-        w_file = open(os.path.join(backup_dir_name, 'varPairs_' + timestamp + '.json'), 'w')
+        w_file = open(os.path.join(backup_dir_name, var_pairs_file_path + '_' + timestamp + '.json'), 'w')
     except FileNotFoundError:
         os.mkdir(backup_dir_name)
-        w_file = open(os.path.join(backup_dir_name, 'varPairs_' + timestamp + '.json'), 'w')
+        w_file = open(os.path.join(backup_dir_name, var_pairs_file_path + '_' + timestamp + '.json'), 'w')
 
     w_file.write(open(var_pairs_file_path).read())
     w_file.close()
