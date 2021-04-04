@@ -9,11 +9,11 @@ from time import sleep
 var_pairs_file_path = 'varPairs.json'
 backup_dir_name = 'varPairs_backup'
 
-general_min_liq_value = 500
+general_min_liq_value = 700
 general_max_liq_value = sys.maxsize
 
 # Factor to modify the liq value percentually. Eg: -0.1 to reduce 10%, 0.3 to increase 30%... 
-general_percentage_factor = 0
+general_percentage_factor = -0.25
 
 run_as_daemon = False
 daemon_wait_time_minutes = 1
