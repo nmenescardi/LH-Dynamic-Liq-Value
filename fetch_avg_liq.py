@@ -28,11 +28,11 @@ def exit_with_error(msg):
 
 def get_page_source():
     try:
-        res = requests.get('http://liquidationsniper.com/charts.php')
-    except:
+        res = requests.get('https://liquidation.wtf/')
+    except Exception as e:
         exit_with_error('Unable to get webpage.')
     else:
-         return res.content.decode()
+        return res.content.decode()
 
 
 def extract_data_points(source):
