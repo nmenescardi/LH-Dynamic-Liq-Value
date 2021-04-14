@@ -2,3 +2,4 @@ Old/
 varPirs_backup
 *.json
 *.txt
+*.pyc
