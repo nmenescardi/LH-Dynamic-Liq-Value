@@ -13,7 +13,7 @@ general_min_liq_value = 700
 general_max_liq_value = sys.maxsize
 
 # Factor to modify the liq value percentually. Eg: -0.1 to reduce 10%, 0.3 to increase 30%... 
-general_percentage_factor = -0.15
+general_percentage_factor = -0.2
 
 run_as_daemon = False
 daemon_wait_time_minutes = 1
@@ -28,7 +28,7 @@ def exit_with_error(msg):
 
 def get_page_source():
     try:
-        res = requests.get('https://liquidation.wtf/')
+        res = requests.get('https://liquidation.wtf/api/v0/liquidations/by_coin')
     except Exception as e:
         exit_with_error('Unable to get webpage.')
     else:
@@ -36,9 +36,7 @@ def get_page_source():
 
 
 def extract_data_points(source):
-    from spidey import WebCrawler
-    list_of_dictionaries = WebCrawler()
-    return list_of_dictionaries
+    return json.loads(source)
 
 
 def load_coin_data():
@@ -54,7 +52,7 @@ def load_coin_data():
 
 
 def modify_coin_data(data_points, coin_data):
-    for point in data_points:
+    for point in data_points['data']:
 
         if 'coins' in coin_data:
             coins = coin_data['coins'] # modifying vairPairs.json
@@ -74,7 +72,8 @@ def modify_coin_data(data_points, coin_data):
                 if 'percentage_factor' in coin:
                     percentage_factor = float(coin['percentage_factor'])
 
-                liq_value_percentage = point['avg_liquidation_value'] + point['avg_liquidation_value'] * percentage_factor
+                average_usdt = float(point['average_usdt'])
+                liq_value_percentage = average_usdt + average_usdt * percentage_factor
                 
                 if liq_value_percentage < min_liq_value:
                     liq_value = min_liq_value
