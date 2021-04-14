@@ -36,6 +36,12 @@ def get_page_source():
 
 
 def extract_data_points(source):
+    from spidey import WebCrawler
+    list_of_dictionaries = WebCrawler()
+    print('------ results: ')
+    print(list_of_dictionaries)
+    return list_of_dictionaries
+
     source = source[source.index('var chartAVGVolume'):]
     source = source[source.index('dataPoints: ['):]
     source = source[0 : source.index(']') + 1]
@@ -64,7 +70,7 @@ def modify_coin_data(data_points, coin_data):
             coins = coin_data # modifying coins.json
 
         for coin in coins:
-            if coin['symbol'] == point['label']:
+            if coin['symbol'] == point['symbol']:
                 min_liq_value = general_min_liq_value
                 max_liq_value = general_max_liq_value
                 percentage_factor = general_percentage_factor
@@ -76,7 +82,7 @@ def modify_coin_data(data_points, coin_data):
                 if 'percentage_factor' in coin:
                     percentage_factor = float(coin['percentage_factor'])
 
-                liq_value_percentage = point['y'] + point['y'] * percentage_factor
+                liq_value_percentage = point['avg_liquidation_value'] + point['avg_liquidation_value'] * percentage_factor
                 
                 if liq_value_percentage < min_liq_value:
                     liq_value = min_liq_value
