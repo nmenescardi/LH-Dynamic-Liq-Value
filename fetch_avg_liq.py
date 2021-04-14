@@ -38,15 +38,7 @@ def get_page_source():
 def extract_data_points(source):
     from spidey import WebCrawler
     list_of_dictionaries = WebCrawler()
-    print('------ results: ')
-    print(list_of_dictionaries)
     return list_of_dictionaries
-
-    source = source[source.index('var chartAVGVolume'):]
-    source = source[source.index('dataPoints: ['):]
-    source = source[0 : source.index(']') + 1]
-    data_points_str = source[source.index('['):]
-    return json.loads(data_points_str)
 
 
 def load_coin_data():
