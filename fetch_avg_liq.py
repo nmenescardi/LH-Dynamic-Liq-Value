@@ -8,6 +8,7 @@ import requests
 import json
 import os
 import sys
+import argparse
 from datetime import datetime
 from time import sleep
 
@@ -23,6 +24,58 @@ general_percentage_factor = -0.2
 
 run_as_daemon = False
 daemon_wait_time_minutes = 1
+
+
+parser = argparse.ArgumentParser(description="Fetch and update liq values.")
+parser.add_argument(
+    "--config-file",
+    type=str,
+    default=var_pairs_file_path,
+    dest='var_pairs_file_path',
+    help="Config file path.",
+)
+parser.add_argument(
+    "--bk-dir",
+    type=str,
+    default=backup_dir_name,
+    dest='backup_dir_name',
+    help="Backup directory name.",
+)
+parser.add_argument(
+    "--min",
+    type=int,
+    default=general_min_liq_value,
+    dest='general_min_liq_value',
+    help="General Minimum Liq Value.",
+)
+parser.add_argument(
+    "--max",
+    type=int,
+    default=general_max_liq_value,
+    dest='general_max_liq_value',
+    help="General Maximum Liq Value.",
+)
+parser.add_argument(
+    "--percentage",
+    type=float,
+    default=general_percentage_factor,
+    dest='general_percentage_factor',
+    help="Factor to modify the liq value percentually. Eg: -0.1 to reduce 10%, 0.3 to increase 30%",
+)
+parser.add_argument(
+    "--deamon",
+    type=bool,
+    default=run_as_daemon,
+    dest='run_as_daemon',
+    help="Run script on deamon mode.",
+)
+parser.add_argument(
+    "--deamon-sleep",
+    type=int,
+    default=daemon_wait_time_minutes,
+    dest='daemon_wait_time_minutes',
+    help="Minutes to wait between each run.",
+)
 
 
 def exit_with_error(msg):
@@ -158,4 +211,5 @@ def main():
 
 
 if __name__ == '__main__':
+    args = parser.parse_args()
     main()
