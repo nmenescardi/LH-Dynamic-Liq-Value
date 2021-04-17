@@ -13,145 +13,143 @@ from datetime import datetime
 from time import sleep
 from Settings.Settings import Settings
 
-SETTINGS = []
+class LiqValue():
+    
+    def __init__(self):
+        settings_handler = Settings(description="Fetch and update liq values.")
+        self.settings = settings_handler.get()
 
-def exit_with_error(msg):
-    print(msg)
-    print('Press Enter to exit.')
-    input()
-    exit()
-
-
-def get_page_source():
-    try:
-        res = requests.get('https://liquidation.wtf/api/v0/liquidations/by_coin')
-    except Exception as e:
-        exit_with_error('Unable to get webpage.')
-    else:
-        return res.content.decode()
+    def exit_with_error(self, msg):
+        print(msg)
+        print('Press Enter to exit.')
+        input()
+        exit()
 
 
-def extract_data_points(source):
-    return json.loads(source)
+    def get_page_source(self):
+        try:
+            res = requests.get('https://liquidation.wtf/api/v0/liquidations/by_coin')
+        except Exception as e:
+            self.exit_with_error('Unable to get webpage.')
+        else:
+            return res.content.decode()
 
 
-def load_coin_data():
-    global SETTINGS
-    try:
-        var_pairs_file = open(SETTINGS['var_pairs_file_path'])
-        backup_var_pairs_file()
-        coin_data = json.load(var_pairs_file)
-    except FileNotFoundError:
-        exit_with_error('varPairs file not found: ' + SETTINGS['var_pairs_file_path'])
-    else:
+    def extract_data_points(self, source):
+        return json.loads(source)
+
+
+    def load_coin_data(self):
+        try:
+            var_pairs_file = open(self.settings['var_pairs_file_path'])
+            self.backup_var_pairs_file()
+            coin_data = json.load(var_pairs_file)
+        except FileNotFoundError:
+            self.exit_with_error('varPairs file not found: ' + self.settings['var_pairs_file_path'])
+        else:
+            var_pairs_file.close()
+            return coin_data
+
+
+    def modify_coin_data(self, data_points, coin_data):
+        for point in data_points['data']:
+
+            if 'coins' in coin_data:
+                coins = coin_data['coins'] # modifying vairPairs.json
+            else:
+                coins = coin_data # modifying coins.json
+
+            for coin in coins:
+                if coin['symbol'] == point['symbol']:
+                    min_liq_value = self.settings['general_min_liq_value']
+                    max_liq_value = self.settings['general_max_liq_value']
+                    percentage_factor = self.settings['general_percentage_factor']
+
+                    if 'min_lick_value' in coin:
+                        min_liq_value = float(coin['min_lick_value'])
+                    if 'max_lick_value' in coin:
+                        max_liq_value = float(coin['max_lick_value'])
+                    if 'percentage_factor' in coin:
+                        percentage_factor = float(coin['percentage_factor'])
+
+                    average_usdt = float(point['average_usdt'])
+                    liq_value_percentage = average_usdt + average_usdt * percentage_factor
+                    
+                    if liq_value_percentage < min_liq_value:
+                        liq_value = min_liq_value
+                    elif liq_value_percentage > max_liq_value:
+                        liq_value = max_liq_value
+                    else:
+                        liq_value = liq_value_percentage
+
+                    coin['lickvalue'] = str(int(liq_value))
+
+
+    def write_coin_data(self, coin_data):
+        var_pairs_file = open(self.settings['var_pairs_file_path'], 'w')
+        json.dump(coin_data, var_pairs_file, indent=4)
         var_pairs_file.close()
-        return coin_data
 
 
-def modify_coin_data(data_points, coin_data):
-    global SETTINGS
-    for point in data_points['data']:
+    def backup_var_pairs_file(self):
+        today = datetime.today()
+        month = str(today.month)
+        day = str(today.day)
+        hour = str(today.hour)
+        minute = str(today.minute)
+        if len(month) == 1:
+            month = '0' + month
+        if len(day) == 1:
+            day = '0' + day
+        if len(hour) == 1:
+            hour = '0' + hour
+        if len(minute) == 1:
+            minute = '0' + minute
 
-        if 'coins' in coin_data:
-            coins = coin_data['coins'] # modifying vairPairs.json
-        else:
-            coins = coin_data # modifying coins.json
+        timestamp = str(today.year) + '_' + month + '_' + day + '_' + hour + '_' + minute
+        try:
+            w_file = open(os.path.join(self.settings['backup_dir_name'], self.settings['var_pairs_file_path'] + '_' + timestamp + '.json'), 'w')
+        except FileNotFoundError:
+            os.mkdir(self.settings['backup_dir_name'])
+            w_file = open(os.path.join(self.settings['backup_dir_name'], self.settings['var_pairs_file_path'] + '_' + timestamp + '.json'), 'w')
 
-        for coin in coins:
-            if coin['symbol'] == point['symbol']:
-                min_liq_value = SETTINGS['general_min_liq_value']
-                max_liq_value = SETTINGS['general_max_liq_value']
-                percentage_factor = SETTINGS['general_percentage_factor']
-
-                if 'min_lick_value' in coin:
-                    min_liq_value = float(coin['min_lick_value'])
-                if 'max_lick_value' in coin:
-                    max_liq_value = float(coin['max_lick_value'])
-                if 'percentage_factor' in coin:
-                    percentage_factor = float(coin['percentage_factor'])
-
-                average_usdt = float(point['average_usdt'])
-                liq_value_percentage = average_usdt + average_usdt * percentage_factor
-                
-                if liq_value_percentage < min_liq_value:
-                    liq_value = min_liq_value
-                elif liq_value_percentage > max_liq_value:
-                    liq_value = max_liq_value
-                else:
-                    liq_value = liq_value_percentage
-
-                coin['lickvalue'] = str(int(liq_value))
+        w_file.write(open(self.settings['var_pairs_file_path']).read())
+        w_file.close()
 
 
-def write_coin_data(coin_data):
-    global SETTINGS
-    var_pairs_file = open(SETTINGS['var_pairs_file_path'], 'w')
-    json.dump(coin_data, var_pairs_file, indent=4)
-    var_pairs_file.close()
+    def main(self):
 
+        if '-d' in sys.argv:
+            self.settings['run_as_daemon'] = True
 
-def backup_var_pairs_file():
-    global SETTINGS
-    today = datetime.today()
-    month = str(today.month)
-    day = str(today.day)
-    hour = str(today.hour)
-    minute = str(today.minute)
-    if len(month) == 1:
-        month = '0' + month
-    if len(day) == 1:
-        day = '0' + day
-    if len(hour) == 1:
-        hour = '0' + hour
-    if len(minute) == 1:
-        minute = '0' + minute
+        while True:
+            print('Getting page source...')
+            page_source = self.get_page_source()
 
-    timestamp = str(today.year) + '_' + month + '_' + day + '_' + hour + '_' + minute
-    try:
-        w_file = open(os.path.join(SETTINGS['backup_dir_name'], SETTINGS['var_pairs_file_path'] + '_' + timestamp + '.json'), 'w')
-    except FileNotFoundError:
-        os.mkdir(SETTINGS['backup_dir_name'])
-        w_file = open(os.path.join(SETTINGS['backup_dir_name'], SETTINGS['var_pairs_file_path'] + '_' + timestamp + '.json'), 'w')
+            print('Extracting data points...')
+            data_points = self.extract_data_points(page_source)
 
-    w_file.write(open(SETTINGS['var_pairs_file_path']).read())
-    w_file.close()
+            print('Loading coin data...')
+            coin_data = self.load_coin_data()
 
+            print('Updating coin data...')
+            self.modify_coin_data(data_points, coin_data)
 
-def main():
-    global SETTINGS
+            print('Writing coin data...')
+            self.write_coin_data(coin_data)
 
-    if '-d' in sys.argv:
-        SETTINGS['run_as_daemon'] = True
+            print('Done.')
 
-    while True:
-        print('Getting page source...')
-        page_source = get_page_source()
+            if self.settings['run_as_daemon']:
+                print('Waiting ' + str(self.settings['daemon_wait_time_minutes']) + ' minutes.')
+                sleep(60 * self.settings['daemon_wait_time_minutes'])
+            else:
+                break
 
-        print('Extracting data points...')
-        data_points = extract_data_points(page_source)
-
-        print('Loading coin data...')
-        coin_data = load_coin_data()
-
-        print('Updating coin data...')
-        modify_coin_data(data_points, coin_data)
-
-        print('Writing coin data...')
-        write_coin_data(coin_data)
-
-        print('Done.')
-
-        if SETTINGS['run_as_daemon']:
-            print('Waiting ' + str(SETTINGS['daemon_wait_time_minutes']) + ' minutes.')
-            sleep(60 * SETTINGS['daemon_wait_time_minutes'])
-        else:
-            break
-
-    print('Success. Press Enter to exit.')
-    input()
+        print('Success. Press Enter to exit.')
+        input()
 
 
 if __name__ == '__main__':
-    settings_handler = Settings(description="Fetch and update liq values.")
-    SETTINGS = settings_handler.get()
-    main()
+    liq_value_saver = LiqValue()
+    liq_value_saver.main()
