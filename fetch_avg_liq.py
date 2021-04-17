@@ -11,72 +11,9 @@ import sys
 import argparse
 from datetime import datetime
 from time import sleep
+from Settings.Settings import Settings
 
-
-var_pairs_file_path = 'varPairs.json'
-backup_dir_name = 'varPairs_backup'
-
-general_min_liq_value = 700
-general_max_liq_value = sys.maxsize
-
-# Factor to modify the liq value percentually. Eg: -0.1 to reduce 10%, 0.3 to increase 30%... 
-general_percentage_factor = -0.2
-
-run_as_daemon = False
-daemon_wait_time_minutes = 1
-
-
-parser = argparse.ArgumentParser(description="Fetch and update liq values.")
-parser.add_argument(
-    "--config-file",
-    type=str,
-    default=var_pairs_file_path,
-    dest='var_pairs_file_path',
-    help="Config file path.",
-)
-parser.add_argument(
-    "--bk-dir",
-    type=str,
-    default=backup_dir_name,
-    dest='backup_dir_name',
-    help="Backup directory name.",
-)
-parser.add_argument(
-    "--min",
-    type=int,
-    default=general_min_liq_value,
-    dest='general_min_liq_value',
-    help="General Minimum Liq Value.",
-)
-parser.add_argument(
-    "--max",
-    type=int,
-    default=general_max_liq_value,
-    dest='general_max_liq_value',
-    help="General Maximum Liq Value.",
-)
-parser.add_argument(
-    "--percentage",
-    type=float,
-    default=general_percentage_factor,
-    dest='general_percentage_factor',
-    help="Factor to modify the liq value percentually. Eg: -0.1 to reduce 10%, 0.3 to increase 30%",
-)
-parser.add_argument(
-    "--deamon",
-    type=bool,
-    default=run_as_daemon,
-    dest='run_as_daemon',
-    help="Run script on deamon mode.",
-)
-parser.add_argument(
-    "--deamon-sleep",
-    type=int,
-    default=daemon_wait_time_minutes,
-    dest='daemon_wait_time_minutes',
-    help="Minutes to wait between each run.",
-)
-
+SETTINGS = []
 
 def exit_with_error(msg):
     print(msg)
@@ -99,18 +36,20 @@ def extract_data_points(source):
 
 
 def load_coin_data():
+    global SETTINGS
     try:
-        var_pairs_file = open(var_pairs_file_path)
+        var_pairs_file = open(SETTINGS['var_pairs_file_path'])
         backup_var_pairs_file()
         coin_data = json.load(var_pairs_file)
     except FileNotFoundError:
-        exit_with_error('varPairs file not found: ' + var_pairs_file_path)
+        exit_with_error('varPairs file not found: ' + SETTINGS['var_pairs_file_path'])
     else:
         var_pairs_file.close()
         return coin_data
 
 
 def modify_coin_data(data_points, coin_data):
+    global SETTINGS
     for point in data_points['data']:
 
         if 'coins' in coin_data:
@@ -120,9 +59,9 @@ def modify_coin_data(data_points, coin_data):
 
         for coin in coins:
             if coin['symbol'] == point['symbol']:
-                min_liq_value = general_min_liq_value
-                max_liq_value = general_max_liq_value
-                percentage_factor = general_percentage_factor
+                min_liq_value = SETTINGS['general_min_liq_value']
+                max_liq_value = SETTINGS['general_max_liq_value']
+                percentage_factor = SETTINGS['general_percentage_factor']
 
                 if 'min_lick_value' in coin:
                     min_liq_value = float(coin['min_lick_value'])
@@ -145,12 +84,14 @@ def modify_coin_data(data_points, coin_data):
 
 
 def write_coin_data(coin_data):
-    var_pairs_file = open(var_pairs_file_path, 'w')
+    global SETTINGS
+    var_pairs_file = open(SETTINGS['var_pairs_file_path'], 'w')
     json.dump(coin_data, var_pairs_file, indent=4)
     var_pairs_file.close()
 
 
 def backup_var_pairs_file():
+    global SETTINGS
     today = datetime.today()
     month = str(today.month)
     day = str(today.day)
@@ -167,20 +108,20 @@ def backup_var_pairs_file():
 
     timestamp = str(today.year) + '_' + month + '_' + day + '_' + hour + '_' + minute
     try:
-        w_file = open(os.path.join(backup_dir_name, var_pairs_file_path + '_' + timestamp + '.json'), 'w')
+        w_file = open(os.path.join(SETTINGS['backup_dir_name'], SETTINGS['var_pairs_file_path'] + '_' + timestamp + '.json'), 'w')
     except FileNotFoundError:
-        os.mkdir(backup_dir_name)
-        w_file = open(os.path.join(backup_dir_name, var_pairs_file_path + '_' + timestamp + '.json'), 'w')
+        os.mkdir(SETTINGS['backup_dir_name'])
+        w_file = open(os.path.join(SETTINGS['backup_dir_name'], SETTINGS['var_pairs_file_path'] + '_' + timestamp + '.json'), 'w')
 
-    w_file.write(open(var_pairs_file_path).read())
+    w_file.write(open(SETTINGS['var_pairs_file_path']).read())
     w_file.close()
 
 
 def main():
-    global run_as_daemon
+    global SETTINGS
 
     if '-d' in sys.argv:
-        run_as_daemon = True
+        SETTINGS['run_as_daemon'] = True
 
     while True:
         print('Getting page source...')
@@ -200,9 +141,9 @@ def main():
 
         print('Done.')
 
-        if run_as_daemon:
-            print('Waiting ' + str(daemon_wait_time_minutes) + ' minutes.')
-            sleep(60 * daemon_wait_time_minutes)
+        if SETTINGS['run_as_daemon']:
+            print('Waiting ' + str(SETTINGS['daemon_wait_time_minutes']) + ' minutes.')
+            sleep(60 * SETTINGS['daemon_wait_time_minutes'])
         else:
             break
 
@@ -211,5 +152,6 @@ def main():
 
 
 if __name__ == '__main__':
-    args = parser.parse_args()
+    settings_handler = Settings(description="Fetch and update liq values.")
+    SETTINGS = settings_handler.get()
     main()
