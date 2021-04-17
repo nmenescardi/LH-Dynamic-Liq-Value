@@ -1,3 +1,9 @@
+"""LH bot script helper to update liquidation values automatically using a 24hs aveage for each coin"""
+
+__author__ = "Nicolas Menescardi"
+__version__ = "1.0.0"
+__license__ = "GNU General Public License v3.0"
+
 import requests
 import json
 import os
