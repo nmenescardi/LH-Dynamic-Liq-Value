@@ -1,35 +1,22 @@
 import logging
 import os
 import inspect
+from Helpers.Singleton import singleton
 
+@singleton
 class AppLogger:
-    __instance = None
-
-    @staticmethod 
-    def get_instance():
-        """ Static access method. """
-        if AppLogger.__instance == None:
-            AppLogger()
-        return AppLogger.__instance
 
     def __init__(self):
-        """ Virtually private constructor. """
-        if AppLogger.__instance != None:
-            raise Exception("This class is a singleton!")
-        else:
-            self.setup()
-            AppLogger.__instance = self
-
+        self.setup()
 
     def setup(self):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
         self._set_file_handler()
         self._set_console_handler()
-        
-    @staticmethod 
-    def get():
-        return AppLogger.get_instance().logger
+
+    def get(self):
+        return self.logger
 
 
     def _set_file_handler(self):

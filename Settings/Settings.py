@@ -5,7 +5,7 @@ from Logger.AppLogger import AppLogger
 class Settings:
     
     def __init__(self, description=''):
-        self.logger = AppLogger.get()
+        self.logger = AppLogger().get()
         self.parser = argparse.ArgumentParser(description)
         self._parse()
 

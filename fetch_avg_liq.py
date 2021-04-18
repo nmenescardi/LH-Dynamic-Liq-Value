@@ -19,7 +19,7 @@ class LiqValue():
     def __init__(self):
         settings_handler = Settings(description="Fetch and update liq values.")
         self.settings = settings_handler.get()
-        self.logger = AppLogger.get()
+        self.logger = AppLogger().get()
 
     def exit_with_error(self, msg):
         print(msg)
