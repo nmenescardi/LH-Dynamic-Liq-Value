@@ -3,29 +3,51 @@ import os
 import inspect
 
 class AppLogger:
-    def __init__(self):
-               
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
+    __instance = None
 
-        file_handler = logging.FileHandler(filename='app.log',
-                                           mode='a')
+    @staticmethod 
+    def get_instance():
+        """ Static access method. """
+        if AppLogger.__instance == None:
+            AppLogger()
+        return AppLogger.__instance
+
+    def __init__(self):
+        """ Virtually private constructor. """
+        if AppLogger.__instance != None:
+            raise Exception("This class is a singleton!")
+        else:
+            self.setup()
+            AppLogger.__instance = self
+
+
+    def setup(self):
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        self._set_file_handler()
+        self._set_console_handler()
         
-        caller_name = self._get_last_caller_file_name()
-        fmt = '%(levelname)s: %(asctime)s - {}:%(lineno)d - %(message)s'.format(caller_name)
+    @staticmethod 
+    def get():
+        return AppLogger.get_instance().logger
+
+
+    def _set_file_handler(self):
+        fh = logging.FileHandler(filename='app.log',
+                                           mode='a')
+        fh.setLevel(logging.DEBUG)
+        
+        fmt = '%(levelname)s: %(asctime)s - %(filename)s:%(lineno)d - %(message)s'
         formatter = logging.Formatter(fmt=fmt,
                                       datefmt='%d-%b-%y %H:%M:%S')
-        file_handler.setFormatter(formatter)
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
 
-        logger.addHandler(file_handler)
-        self.logger = logger
+
+    def _set_console_handler(self):
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
         
-    def get(self):
-        return self.logger
-
-    def _get_last_caller_file_name(self):
-        return self._get_file_name_from_path(
-            inspect.stack()[2].filename)
-    
-    def _get_file_name_from_path(self, path):
-        return os.path.basename(path)
+        formatter = logging.Formatter(fmt='%(levelname)s: - %(message)s')
+        ch.setFormatter(formatter)
+        self.logger.addHandler(ch)

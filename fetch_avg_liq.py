@@ -12,22 +12,23 @@ import argparse
 from datetime import datetime
 from time import sleep
 from Settings.Settings import Settings
+from Logger.AppLogger import AppLogger
 
 class LiqValue():
     
     def __init__(self):
         settings_handler = Settings(description="Fetch and update liq values.")
         self.settings = settings_handler.get()
+        self.logger = AppLogger.get()
 
     def exit_with_error(self, msg):
         print(msg)
-        print('Press Enter to exit.')
-        input()
         exit()
 
 
     def get_page_source(self):
         try:
+            self.logger.debug('Fetching API')
             res = requests.get('https://liquidation.wtf/api/v0/liquidations/by_coin')
         except Exception as e:
             self.exit_with_error('Unable to get webpage.')
@@ -145,9 +146,6 @@ class LiqValue():
                 sleep(60 * self.settings['daemon_wait_time_minutes'])
             else:
                 break
-
-        print('Success. Press Enter to exit.')
-        input()
 
 
 if __name__ == '__main__':
