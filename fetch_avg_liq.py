@@ -22,13 +22,13 @@ class LiqValue():
         self.logger = AppLogger().get()
 
     def exit_with_error(self, msg):
-        print(msg)
+        self.logger.error(msg)
         exit()
 
 
     def get_page_source(self):
         try:
-            self.logger.debug('Fetching API')
+            self.logger.debug('Fetching API data')
             res = requests.get('https://liquidation.wtf/api/v0/liquidations/by_coin')
         except Exception as e:
             self.exit_with_error('Unable to get webpage.')
@@ -42,9 +42,11 @@ class LiqValue():
 
     def load_coin_data(self):
         try:
+            self.logger.debug('Opening coins config file')
             var_pairs_file = open(self.settings['var_pairs_file_path'])
             self.backup_var_pairs_file()
             coin_data = json.load(var_pairs_file)
+            self.logger.debug(coin_data)
         except FileNotFoundError:
             self.exit_with_error('varPairs file not found: ' + self.settings['var_pairs_file_path'])
         else:
@@ -93,6 +95,7 @@ class LiqValue():
 
 
     def backup_var_pairs_file(self):
+        self.logger.debug('Backing up old configuration')
         today = datetime.today()
         month = str(today.month)
         day = str(today.day)
@@ -108,11 +111,13 @@ class LiqValue():
             minute = '0' + minute
 
         timestamp = str(today.year) + '_' + month + '_' + day + '_' + hour + '_' + minute
+        filename = self.settings['var_pairs_file_path'] + '_' + timestamp + '.json'
+        self.logger.debug('filename is: ' + filename)
         try:
-            w_file = open(os.path.join(self.settings['backup_dir_name'], self.settings['var_pairs_file_path'] + '_' + timestamp + '.json'), 'w')
+            w_file = open(os.path.join(self.settings['backup_dir_name'], filename), 'w')
         except FileNotFoundError:
             os.mkdir(self.settings['backup_dir_name'])
-            w_file = open(os.path.join(self.settings['backup_dir_name'], self.settings['var_pairs_file_path'] + '_' + timestamp + '.json'), 'w')
+            w_file = open(os.path.join(self.settings['backup_dir_name'], filename), 'w')
 
         w_file.write(open(self.settings['var_pairs_file_path']).read())
         w_file.close()
@@ -124,25 +129,25 @@ class LiqValue():
             self.settings['run_as_daemon'] = True
 
         while True:
-            print('Getting page source...')
+            self.logger.info('Getting page source...')
             page_source = self.get_page_source()
 
-            print('Extracting data points...')
+            self.logger.info('Extracting data points...')
             data_points = self.extract_data_points(page_source)
 
-            print('Loading coin data...')
+            self.logger.info('Loading coin data...')
             coin_data = self.load_coin_data()
 
-            print('Updating coin data...')
+            self.logger.info('Updating coin data...')
             self.modify_coin_data(data_points, coin_data)
 
-            print('Writing coin data...')
+            self.logger.info('Writing coin data...')
             self.write_coin_data(coin_data)
 
-            print('Done.')
+            self.logger.info('Done.')
 
             if self.settings['run_as_daemon']:
-                print('Waiting ' + str(self.settings['daemon_wait_time_minutes']) + ' minutes.')
+                self.logger.info('Waiting ' + str(self.settings['daemon_wait_time_minutes']) + ' minutes.')
                 sleep(60 * self.settings['daemon_wait_time_minutes'])
             else:
                 break

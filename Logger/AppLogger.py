@@ -35,6 +35,6 @@ class AppLogger:
         ch = logging.StreamHandler()
         ch.setLevel(logging.INFO)
         
-        formatter = logging.Formatter(fmt='%(levelname)s: - %(message)s')
+        formatter = logging.Formatter(fmt='%(levelname)s: %(message)s')
         ch.setFormatter(formatter)
         self.logger.addHandler(ch)
