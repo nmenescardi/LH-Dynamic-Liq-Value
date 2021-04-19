@@ -30,7 +30,7 @@ class LiqValue():
         try:
             self.logger.debug('Fetching API data')
             res = requests.get('https://liquidation.wtf/api/v0/liquidations/by_coin')
-        except Exception as e:
+        except Exception:
             self.exit_with_error('Unable to get webpage.')
         else:
             return res.content.decode()
