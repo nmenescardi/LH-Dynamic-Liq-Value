@@ -3,7 +3,7 @@ import argparse
 from settings.config import default_config
 from logger.app_logger import AppLogger
 
-class Settings:  # pylint: disable=too-few-public-methods    
+class Settings:  # pylint: disable=too-few-public-methods
     """Main Settings class"""
 
     def __init__(self, description=''):
