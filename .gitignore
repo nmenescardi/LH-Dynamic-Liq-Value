@@ -4,3 +4,4 @@ varPirs_backup
 *.txt
 *.pyc
 *.log
+local-workflow.sh
