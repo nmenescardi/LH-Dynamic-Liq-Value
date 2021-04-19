@@ -12,6 +12,7 @@ import requests
 from settings.settings import Settings
 from logger.app_logger import AppLogger
 
+
 class LiqValue():
     """Main Module class"""
 
@@ -25,7 +26,6 @@ class LiqValue():
         self.logger.error(msg)
         sys.exit()
 
-
     def get_page_source(self):
         """Fetch and return API Response"""
         try:
@@ -35,7 +35,6 @@ class LiqValue():
             self.exit_with_error('Unable to get webpage.')
         else:
             return res.content.decode()
-
 
     def load_coin_data(self):
         """Helper function to show errors and exit"""
@@ -52,15 +51,14 @@ class LiqValue():
             var_pairs_file.close()
             return coin_data
 
-
     def modify_coin_data(self, data_points, coin_data):
         """It modifies the liq value configuration for each coin"""
         for point in data_points['data']:
 
             if 'coins' in coin_data:
-                coins = coin_data['coins'] # modifying vairPairs.json
+                coins = coin_data['coins']  # modifying vairPairs.json
             else:
-                coins = coin_data # modifying coins.json
+                coins = coin_data  # modifying coins.json
 
             for coin in coins:
                 if coin['symbol'] == point['symbol']:
@@ -97,7 +95,6 @@ class LiqValue():
                     )
                     coin['lickvalue'] = str(new_lickvalue)
 
-
     def get_percent_change(self, previous, current):
         """Get percentage of change between current and previous liq values"""
         if current == previous:
@@ -110,13 +107,11 @@ class LiqValue():
             self.logger.error("Exception trying to divide by zero")
             return 0
 
-
     def write_coin_data(self, coin_data):
         """Writes modified data on config file"""
         var_pairs_file = open(self.settings['var_pairs_file_path'], 'w')
         json.dump(coin_data, var_pairs_file, indent=4)
         var_pairs_file.close()
-
 
     def backup_var_pairs_file(self):
         """Helper function to backup old configuration"""
@@ -146,7 +141,6 @@ class LiqValue():
 
         w_file.write(open(self.settings['var_pairs_file_path']).read())
         w_file.close()
-
 
     def main(self):
         """Main method to hanlde the process"""
