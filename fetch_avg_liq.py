@@ -85,7 +85,29 @@ class LiqValue():
                     else:
                         liq_value = liq_value_percentage
 
-                    coin['lickvalue'] = str(int(liq_value))
+                    new_lickvalue = int(liq_value)
+                    percent_change = self.get_percent_change(int(coin["lickvalue"]), 
+                                                             new_lickvalue)
+                    self.logger.info(
+                        "%s \t %s \t -> \t %s (%s)",
+                        coin["symbol"],
+                        coin["lickvalue"],
+                        new_lickvalue,
+                        percent_change,
+                    )
+                    coin['lickvalue'] = str(new_lickvalue)
+
+
+    def get_percent_change(self, previous, current):
+        """Get percentage of change between current and previous liq values"""
+        if current == previous:
+            return 0
+        try:
+            change = round((abs(current - previous) / previous) * 100.0, 2)
+            sign = "+" if current >= previous else "-"
+            return sign + str(change) + "%"
+        except ZeroDivisionError:
+            return 0
 
 
     def write_coin_data(self, coin_data):
