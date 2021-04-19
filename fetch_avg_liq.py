@@ -8,9 +8,11 @@ import os
 import sys
 from datetime import datetime
 from time import sleep
+
 import requests
-from settings.settings import Settings
+
 from logger.app_logger import AppLogger
+from settings.settings import Settings
 
 
 class LiqValue:

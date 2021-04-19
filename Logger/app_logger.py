@@ -1,6 +1,7 @@
 """Module to hanlde app logging functionality"""
 
 import logging
+
 from helpers.singleton import singleton
 
 

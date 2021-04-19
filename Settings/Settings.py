@@ -1,7 +1,8 @@
 """Module to handle default settings and script arguments"""
 import argparse
-from settings.config import default_config
+
 from logger.app_logger import AppLogger
+from settings.config import default_config
 
 
 class Settings:  # pylint: disable=too-few-public-methods
