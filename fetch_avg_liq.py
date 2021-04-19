@@ -1,46 +1,44 @@
-"""LH bot script helper to update liquidation values automatically using a 24hs aveage for each coin"""
-
+"""LH bot script helper to update liquidation values automatically using a 24hs aveage"""
 __author__ = "Nicolas Menescardi"
 __version__ = "1.0.0"
 __license__ = "GNU General Public License v3.0"
 
-import requests
 import json
 import os
 import sys
-import argparse
 from datetime import datetime
 from time import sleep
-from Settings.Settings import Settings
-from Logger.AppLogger import AppLogger
+import requests
+from settings.settings import Settings
+from logger.app_logger import AppLogger
 
 class LiqValue():
-    
+    """Main Module class"""
+
     def __init__(self):
         settings_handler = Settings(description="Fetch and update liq values.")
         self.settings = settings_handler.get()
         self.logger = AppLogger().get()
 
     def exit_with_error(self, msg):
+        """Helper function to show errors and exit"""
         self.logger.error(msg)
-        exit()
+        sys.exit()
 
 
     def get_page_source(self):
+        """Fetch and return API Response"""
         try:
             self.logger.debug('Fetching API data')
             res = requests.get('https://liquidation.wtf/api/v0/liquidations/by_coin')
-        except Exception:
+        except requests.RequestException:
             self.exit_with_error('Unable to get webpage.')
         else:
             return res.content.decode()
 
 
-    def extract_data_points(self, source):
-        return json.loads(source)
-
-
     def load_coin_data(self):
+        """Helper function to show errors and exit"""
         try:
             self.logger.debug('Opening coins config file')
             var_pairs_file = open(self.settings['var_pairs_file_path'])
@@ -48,13 +46,15 @@ class LiqValue():
             coin_data = json.load(var_pairs_file)
             self.logger.debug(coin_data)
         except FileNotFoundError:
-            self.exit_with_error('varPairs file not found: ' + self.settings['var_pairs_file_path'])
+            self.exit_with_error(
+                'varPairs file not found: ' + self.settings['var_pairs_file_path'])
         else:
             var_pairs_file.close()
             return coin_data
 
 
     def modify_coin_data(self, data_points, coin_data):
+        """It modifies the liq value configuration for each coin"""
         for point in data_points['data']:
 
             if 'coins' in coin_data:
@@ -77,7 +77,7 @@ class LiqValue():
 
                     average_usdt = float(point['average_usdt'])
                     liq_value_percentage = average_usdt + average_usdt * percentage_factor
-                    
+
                     if liq_value_percentage < min_liq_value:
                         liq_value = min_liq_value
                     elif liq_value_percentage > max_liq_value:
@@ -86,7 +86,7 @@ class LiqValue():
                         liq_value = liq_value_percentage
 
                     new_lickvalue = int(liq_value)
-                    percent_change = self.get_percent_change(int(coin["lickvalue"]), 
+                    percent_change = self.get_percent_change(int(coin["lickvalue"]),
                                                              new_lickvalue)
                     self.logger.info(
                         "%s \t %s \t -> \t %s (%s)",
@@ -107,16 +107,19 @@ class LiqValue():
             sign = "+" if current >= previous else "-"
             return sign + str(change) + "%"
         except ZeroDivisionError:
+            self.logger.error("Exception trying to divide by zero")
             return 0
 
 
     def write_coin_data(self, coin_data):
+        """Writes modified data on config file"""
         var_pairs_file = open(self.settings['var_pairs_file_path'], 'w')
         json.dump(coin_data, var_pairs_file, indent=4)
         var_pairs_file.close()
 
 
     def backup_var_pairs_file(self):
+        """Helper function to backup old configuration"""
         self.logger.debug('Backing up old configuration')
         today = datetime.today()
         month = str(today.month)
@@ -134,7 +137,7 @@ class LiqValue():
 
         timestamp = str(today.year) + '_' + month + '_' + day + '_' + hour + '_' + minute
         filename = self.settings['var_pairs_file_path'] + '_' + timestamp + '.json'
-        self.logger.debug('filename is: ' + filename)
+        self.logger.debug('filename is: %s', filename)
         try:
             w_file = open(os.path.join(self.settings['backup_dir_name'], filename), 'w')
         except FileNotFoundError:
@@ -146,7 +149,7 @@ class LiqValue():
 
 
     def main(self):
-
+        """Main method to hanlde the process"""
         if '-d' in sys.argv:
             self.settings['run_as_daemon'] = True
 
@@ -155,7 +158,7 @@ class LiqValue():
             page_source = self.get_page_source()
 
             self.logger.info('Extracting data points...')
-            data_points = self.extract_data_points(page_source)
+            data_points = json.loads(page_source)
 
             self.logger.info('Loading coin data...')
             coin_data = self.load_coin_data()
@@ -169,7 +172,8 @@ class LiqValue():
             self.logger.info('Done.')
 
             if self.settings['run_as_daemon']:
-                self.logger.info('Waiting ' + str(self.settings['daemon_wait_time_minutes']) + ' minutes.')
+                msg = 'Waiting ' + str(self.settings['daemon_wait_time_minutes']) + ' minutes.'
+                self.logger.info(msg)
                 sleep(60 * self.settings['daemon_wait_time_minutes'])
             else:
                 break

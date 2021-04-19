@@ -1,3 +1,5 @@
+"""Helper structure to set default config""" # pylint: disable=line-too-long
+
 import sys
 
 default_config = [
