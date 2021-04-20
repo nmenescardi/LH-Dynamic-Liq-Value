@@ -34,7 +34,7 @@ default_config = [
     {
         "arg": "--percent",
         "type": float,
-        "default": -0.2,
+        "default": -0.1,
         "dest": "general_percentage_factor",
         "help": "Factor to modify the liq value percentually. Eg: -0.1 to reduce 10%, 0.3 to increase 30%",  # noqa: E501
     },
