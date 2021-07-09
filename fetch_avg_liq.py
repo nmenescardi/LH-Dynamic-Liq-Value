@@ -65,6 +65,7 @@ class LiqValue:
 
             for coin in coins:
                 if coin["symbol"] == point["symbol"]:
+                    #### Modify liq value
                     min_liq_value = self.settings["general_min_liq_value"]
                     max_liq_value = self.settings["general_max_liq_value"]
                     percentage_factor = self.settings["general_percentage_factor"]
@@ -100,6 +101,14 @@ class LiqValue:
                         percent_change,
                     )
                     coin["lickvalue"] = str(new_lickvalue)
+                    
+                    #### Modify offsets
+                    offset_change = self.settings["general_offset_change"]
+                    longoffset = int(coin["longoffset"])
+                    coin["longoffset"] = str(longoffset + offset_change)
+                    shortoffset = int(coin["shortoffset"])
+                    coin["shortoffset"] = str(shortoffset + offset_change)
+
 
     def get_percent_change(self, previous, current):
         """Get percentage of change between current and previous liq values"""

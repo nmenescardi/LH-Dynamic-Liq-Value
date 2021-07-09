@@ -39,6 +39,13 @@ default_config = [
         "help": "Factor to modify the liq value percentually. Eg: -0.1 to reduce 10%%, 0.3 to increase 30%%"  # noqa: E501
     },
     {
+        "arg": "--oc",
+        "type": int,
+        "default": 0,
+        "dest": "general_offset_change",
+        "help": "Add or Subtract to both offsets on all coins"  # noqa: E501
+    },
+    {
         "arg": "--deamon",
         "action": "store_true",
         "dest": "run_as_daemon",
